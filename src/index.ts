@@ -2,6 +2,14 @@ import rl from 'readline-sync';
 import { Connect4 } from './Connect4';
 import { BoardState } from './BoardState';
 
+console.log(
+  'Instructions: Press the number of the column you wish to place your piece in.'
+);
+console.log(
+  "The game does not currently check for wins. You'll have to do that on your own."
+);
+console.log('To quit or complete a game, press "q".\n');
+
 const game = new Connect4();
 game.initializeBoard();
 console.log(game.printBoard());
