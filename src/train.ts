@@ -21,8 +21,6 @@ const { inputs, labels } = tf.tidy(() => {
     return arr;
   });
 
-  console.log(labels);
-
   const inputTensor = tf.tensor2d(inputs, [inputs.length, inputs[0].length]);
   const labelTensor = tf.tensor2d(labels, [labels.length, labels[0].length]);
 
@@ -59,6 +57,8 @@ function createModel() {
       useBias: true
     })
   );
+  model.add(tf.layers.dense({ units: 6, useBias: true }));
+  model.add(tf.layers.dense({ units: 6, useBias: true }));
   model.add(tf.layers.dense({ units: 6, useBias: true }));
 
   return model;
