@@ -1,6 +1,12 @@
-import rl from 'readline-sync';
 import { Connect4 } from './Connect4';
 import { BoardState } from './BoardState';
+import * as tf from '@tensorflow/tfjs-node';
+import { createInterface } from 'readline';
+
+const rl = createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
 console.log(
   'Instructions: Press the number of the column you wish to place your piece in.'
@@ -10,20 +16,28 @@ console.log(
 );
 console.log('To quit or complete a game, press "q".\n');
 
-const game = new Connect4();
-game.initializeBoard();
-console.log(game.printBoard());
-let currentUser: BoardState = BoardState.USER;
-while (true) {
-  console.log('\nPlayer ' + (currentUser === BoardState.USER ? '1' : '2'));
-  const input = rl.question('Next place? ');
-  if (input === 'q') {
-    console.log('Thanks for your help!');
-    process.exit(0);
+(async () => {
+  const model = await tf.loadLayersModel(
+    'file://' + __dirname + '/../data/model/model.json'
+  );
+
+  const game = new Connect4(model);
+  game.initializeBoard();
+  console.log(game.printBoard());
+  function prompt() {
+    // console.log('\nPlayer ' + (currentUser === BoardState.USER ? '1' : '2'));
+    rl.question('Next place? ', input => {
+      if (input === 'q') {
+        console.log('Thanks for your help!');
+        process.exit(0);
+      }
+      const column = parseInt(input);
+      game.place(BoardState.USER, column);
+      const computerChoice = game.pickNextMove();
+      game.place(BoardState.COMPUTER, computerChoice + 1);
+      console.log('\n' + game.printBoard() + '\n');
+      prompt();
+    });
   }
-  const column = parseInt(input);
-  game.place(currentUser, column);
-  console.log('\n' + game.printBoard() + '\n');
-  currentUser =
-    currentUser === BoardState.USER ? BoardState.COMPUTER : BoardState.USER;
-}
+  prompt();
+})();

@@ -1,12 +1,15 @@
 import { BoardState } from './BoardState';
 import { readFileSync, writeFile, writeFileSync } from 'fs';
 import { Move } from './Move.model';
+import * as tf from '@tensorflow/tfjs-node';
 
 export class Connect4 {
   board: BoardState[][] = [];
   currentMoveData: Move[];
+  model: tf.LayersModel;
 
-  constructor() {
+  constructor(model: tf.LayersModel) {
+    this.model = model;
     try {
       const data = readFileSync(__dirname + '/../data/moves.json', 'utf-8');
       this.currentMoveData = (JSON.parse(data) as { moves: Move[] }).moves;
@@ -36,7 +39,9 @@ export class Connect4 {
     if (bottomOpenRow < 0) {
       return false;
     } else {
-      this.saveMove(player, position - 1);
+      if (player === BoardState.USER) {
+        this.saveMove(player, position - 1);
+      }
       this.board[bottomOpenRow][position - 1] = player;
       return true;
     }
@@ -68,6 +73,24 @@ export class Connect4 {
         .map((j, i) => i + 1)
         .join(' ')
     );
+  }
+
+  pickNextMove() {
+    const board = this.board.flat();
+    const inputTensor = tf.tensor2d([board]);
+    const matrix = this.model.predict(inputTensor) as tf.Tensor2D;
+
+    const values = matrix.dataSync();
+    const arr = Array.from(values);
+
+    let index = 0;
+    for (let i = 1; i < arr.length; i++) {
+      if (arr[i] > arr[index]) {
+        index = i;
+      }
+    }
+
+    return index;
   }
 
   saveMove(player: BoardState, column: number) {
